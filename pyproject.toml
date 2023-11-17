@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "aman-discord-bot"
+version = "0.1.0"
+description = ""
+authors = ["Aman Kumar <akumar999022@gmail.com>"]
+readme = "README.md"
+packages = [{include = "aman_discord_bot"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+discord-py = "^2.3.2"
+python-dotenv = "^1.0.0"
+python-ffmpeg = "^2.0.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
