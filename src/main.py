@@ -1,13 +1,14 @@
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import os
 
 import discord
 from discord.ext import commands
-from dotenv import load_dotenv
 
 from download import Downloader
 from progress_bar import get_progress_bar
-
-load_dotenv()
 
 TOKEN = os.getenv("TOKEN")
 
