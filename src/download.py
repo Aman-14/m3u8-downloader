@@ -9,7 +9,7 @@ from ffmpeg.asyncio import FFmpeg
 from ffmpeg.types import asyncio
 from ffmpeg.utils import re
 
-PATH = Path(os.getenv("PATH", "downloads"))
+PATH = Path(os.getenv("OUTPUT_PATH", "downloads"))
 PATH.mkdir(parents=True, exist_ok=True)
 
 
