@@ -3,14 +3,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
+from io import BytesIO
 
 import discord
 from discord.ext import commands
 
+import logger
 from download import Downloader
 from progress_bar import get_progress_bar
 
 TOKEN = os.getenv("TOKEN")
+
 
 if not TOKEN:
     print("No token provided. Exiting...")
@@ -54,6 +57,21 @@ async def download(ctx: commands.Context[Bot], url: str, file_name: str):
     reply_message = await ctx.reply("Downloading..")
 
     async for progress in progress_iter:
+        if progress.error:
+            ret = progress.get_error_stack()
+            stderr = downloader.get_stderr()
+            fp = BytesIO(stderr.encode("utf-8"))
+            await reply_message.edit(
+                content=(
+                    f"```\n"
+                    f"{ret}\n"
+                    f"Last line of stderr:\n{stderr.splitlines().pop()}\n"
+                    "```"
+                ),
+                attachments=[discord.File(fp=fp, filename="stderr.txt")],
+            )
+            break
+
         ret = "```\n"
         if progress.duration:
             bar = get_progress_bar(
@@ -83,4 +101,10 @@ async def cancel(ctx: commands.Context, name: str):
     await ctx.reply("Download cancelled")
 
 
-bot.run(TOKEN)
+def main():
+    logger.setup()
+    bot.run(TOKEN)
+
+
+if __name__ == "__main__":
+    main()

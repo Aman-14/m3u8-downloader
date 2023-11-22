@@ -1,16 +1,20 @@
 import datetime
+import logging
 import os
+import traceback
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-from ffmpeg import Progress
+from ffmpeg import FFmpegError, Progress
 from ffmpeg.asyncio import FFmpeg
 from ffmpeg.types import asyncio
 from ffmpeg.utils import re
 
 PATH = Path(os.getenv("OUTPUT_PATH", "downloads"))
 PATH.mkdir(parents=True, exist_ok=True)
+
+logger = logging.getLogger(__name__)
 
 
 class Downloader:
@@ -29,12 +33,14 @@ class Downloader:
         self._output_file = PATH / output_file
         self._task: asyncio.Task | None = None
         self._ffmpeg_process: FFmpeg | None = None
+        self._stderr: str = ""
 
     def on_start(self, arguments: list[str]):
         print("Download Started with arguments", arguments)
 
     def on_stderr(self, line: str):
-        # print("stderr:", line)
+        logger.info(f"stderr:{self._output_file.name}- " + line)
+        self._stderr += line + "\n"
         if not self._status.duration:
             ob = re.search(r"Duration: (\d{2}):(\d{2}):(\d{2})", line)
             if ob:
@@ -52,21 +58,25 @@ class Downloader:
         self._status.status = "PROGRESS"
 
     def on_completed(self):
-        print("completed")
+        logger.info(f"Completed: {self._output_file.name}")
         self._status.status = "COMPLETED"
 
     def on_terminated(self):
-        print("terminated")
+        logger.info(f"Terminated: {self._output_file.name}")
         self._status.status = "TERMINATED"
 
+    def get_stderr(self):
+        return self._stderr
+
     async def cancel_download(self):
-        if self._task:
-            self._task.cancel()
+        if self._ffmpeg_process:
+            self._ffmpeg_process.terminate()
             try:
                 self._output_file.unlink()
             except FileNotFoundError:
                 pass
             return True
+        return False
 
     async def download(self):
         ffmpeg = (
@@ -88,9 +98,14 @@ class Downloader:
         self._task = asyncio.create_task(ffmpeg.execute())
 
         def on_task_end(task: asyncio.Task):
-            if task.cancelled():
-                ffmpeg.terminate()
-                self.on_terminated()
+            try:
+                task.result()
+            except FFmpegError as e:
+                logger.error(
+                    f"Error: {self._output_file.name}",
+                    exc_info=e,
+                )
+                self._status.error = e
 
         self._task.add_done_callback(on_task_end)
 
@@ -124,6 +139,15 @@ class DownloadStatus:
     play_speed: float
     current_size: int
     status: Literal["COMPLETED"] | Literal["TERMINATED"] | Literal["PROGRESS"]
+    error: FFmpegError | None = None
+
+    def get_error_stack(self):
+        if self.error:
+            stack = traceback.format_exception(
+                type(self.error), self.error, self.error.__traceback__
+            )
+            return "\n".join(stack)
+        raise ValueError("No error found")
 
     def __str__(self):
         return (
