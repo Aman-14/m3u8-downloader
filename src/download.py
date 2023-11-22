@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class Downloader:
     def __init__(
-        self, url: str, progress_interval: int, output_file: str = "output.mp4"
+        self, url: str, progress_interval: int, output_file: str = "output.mkv"
     ):
         self._url = url
         self._progress_interval = progress_interval
@@ -36,7 +36,7 @@ class Downloader:
         self._stderr: str = ""
 
     def on_start(self, arguments: list[str]):
-        print("Download Started with arguments", arguments)
+        logger.info("Download Started with arguments", arguments)
 
     def on_stderr(self, line: str):
         logger.info(f"stderr:{self._output_file.name}- " + line)

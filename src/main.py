@@ -39,8 +39,8 @@ bot = Bot(command_prefix="", intents=intents)
 
 @bot.command(name="d")
 async def download(ctx: commands.Context[Bot], url: str, file_name: str):
-    if not file_name.endswith(".mp4"):
-        file_name += ".mp4"
+    if not file_name.endswith(".mkv"):
+        file_name += ".mkv"
 
     if file_name in ctx.bot.downloads:
         await ctx.reply("Already downloading")
@@ -82,6 +82,7 @@ async def download(ctx: commands.Context[Bot], url: str, file_name: str):
             ret += f"Progress:\n{bar}\n"
 
         ret += str(progress) + "\n```"
+        print(ret)
         await reply_message.edit(content=ret)
 
     ctx.bot.downloads.pop(file_name, None)
@@ -89,8 +90,8 @@ async def download(ctx: commands.Context[Bot], url: str, file_name: str):
 
 @bot.command()
 async def cancel(ctx: commands.Context, name: str):
-    if not name.endswith(".mp4"):
-        name += ".mp4"
+    if not name.endswith(".mkv"):
+        name += ".mkv"
 
     if name not in ctx.bot.downloads:
         await ctx.reply("No such download")
