@@ -16,3 +16,9 @@ python-ffmpeg = "^2.0.4"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+# set venv path to .venv 
+[tool.pyright]
+exclude = [".venv"]
+venvPath = "."
+venv =  ".venv"
